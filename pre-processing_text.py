@@ -44,6 +44,18 @@ def display_topics(model, feature_names, no_top_words):
 def main():
     start_time = time.time()
 
+#---------------------------------
+
+
+#----------------------------
+
+
+
+
+
+
+
+
     initial_data_path = "data/prefeituras.csv"
     city_hall_df = pd.read_csv(
         initial_data_path, encoding="utf-8",
@@ -52,7 +64,7 @@ def main():
     for col in city_hall_df.columns:
         print(col, city_hall_df[col].isnull().sum())
     rws = city_hall_df
-    rws = city_hall_df.head(10000)
+    rws = city_hall_df.head(10)
 
     rws['Message'] = rws['Message'].str.replace('[^\w\s.]', '', flags=re.UNICODE)
     rws['Message'] = rws['Message'].fillna('')
@@ -71,7 +83,21 @@ def main():
 
     #rws.to_csv('data/pre_processed_discourses_10.csv')
 
-#------- PART 3 -----------------------------------------------------------------------------------#
+# ------------------ pre visualization data ------------------- #
+    df = rws[['Page Name', 'Post Created Date', 'lemmatized']]
+    #df = df.sort_values(by="Post Created Date")
+    df['Post Created Date'] = pd.to_datetime(df['Post Created Date'])
+    df['Post Created Date'] = df['Post Created Date'].dt.strftime('%Y-%m')
+
+
+
+
+
+    #--
+    #--
+    #--
+    #--
+    #------- PART 3 -----------------------------------------------------------------------------------#
     df = rws[['wordnet_pos', 'lemmatized']]
     df['lemma_str'] = [' '.join(map(str, l)) for l in df['lemmatized']]
     tf_vectorizer = CountVectorizer(max_df=0.9, min_df=25, max_features=5000)
