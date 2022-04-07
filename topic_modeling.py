@@ -16,8 +16,11 @@ import warnings
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
+import pyLDAvis
+import pyLDAvis.sklearn
 
 TRANSFORM = False
+GENERATE_GRAPH = False
 
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords, wordnet
@@ -110,10 +113,17 @@ def main():
     doc_term_matrix = pd.DataFrame(tf.toarray(), columns=list(tf_feature_names))
     # print(doc_term_matrix)
     lda_model = LatentDirichletAllocation(n_components=5, learning_method='online',
-                                          max_iter=500, random_state=0).fit(tf)
+                                          max_iter=5, random_state=0).fit(tf)
     no_top_words = 10
     display_topics(lda_model, tf_feature_names, no_top_words)
 
+
+    panel = pyLDAvis.sklearn.prepare(lda_model, tf, tf_vectorizer, mds='tsne')
+    #panel
+
+    pyLDAvis.save_html(panel, './data/lda_result_mine.html')
+
+    # Transform dataframe
     if (TRANSFORM):
         lda_output = lda_model.fit_transform(tf)
 
@@ -149,18 +159,17 @@ def main():
             df_result = pd.DataFrame(data, columns=['post_created_date', 'topic', 'probability'])
 
         # seaborn graph
-        # ax = sns.displot(df_result, x="post_created_date", hue="topic", y="probability")
-        # ax = sns.plot(df_result, kind='bar', stacked=True, x="post_created_date", hue="topic", y="probability")
-        df.set_index('post_created_date').plot(kind='bar', stacked=True,
-                                               color=['blue', 'green', 'grey', 'red', 'orange'])
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
-                   ncol=5, fancybox=True, shadow=True)
-        plt.subplots_adjust(bottom=0.20)
-        plt.xlabel("Mês de criação")
-        plt.ylabel("Probabilidade de cada Tópico")
+        if (GENERATE_GRAPH):
+            df.set_index('post_created_date').plot(kind='bar', stacked=True,
+                                                   color=['blue', 'green', 'grey', 'red', 'orange'])
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
+                       ncol=5, fancybox=True, shadow=True)
+            plt.subplots_adjust(bottom=0.20)
+            plt.xlabel("Mês de criação")
+            plt.ylabel("Probabilidade de cada Tópico")
 
-        plt.xticks(rotation=45)
-        plt.show()
+            plt.xticks(rotation=45)
+            plt.show()
 
         # df_document_topic['topic_list'] = df_document_topic[['Topic0', 'Topic1']].values.tolist()
         # df_document_topic['topic_list'] = np.round(
