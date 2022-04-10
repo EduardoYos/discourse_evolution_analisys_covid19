@@ -90,16 +90,8 @@ def topic_distribution(df):
 
 def main():
     start_time = time.time()
-
-    lda_model = LatentDirichletAllocation(n_components=5,  # Number of topics
-                                          max_iter=10,  # Max learning iterations
-                                          learning_method='online',
-                                          random_state=100,  # Random state
-                                          batch_size=128,  # n docs in each learning iter
-                                          evaluate_every=-1,  # compute perplexity every n iters, default: Don't
-                                          n_jobs=-1,  # Use all available CPUs
-                                          )
     warnings.filterwarnings("ignore")
+
     path = './data/'
     df_prefeituras = pd.read_csv(path + 'prefeituras.csv')
     df_depara = pd.read_csv(path + 'prefeito-cidade.csv')
@@ -168,7 +160,7 @@ def main():
 
     # LDA Model
     lda_model = LatentDirichletAllocation(n_components=5,  # Number of topics
-                                          max_iter=2,  # Max learning iterations
+                                          max_iter=10,  # Max learning iterations
                                           learning_method='online',
                                           random_state=100,  # Random state
                                           batch_size=128,  # n docs in each learning iter
