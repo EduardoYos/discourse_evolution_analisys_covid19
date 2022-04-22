@@ -1,3 +1,10 @@
+# script to generate graph based on number of cases and deaths of covid-19 and topics information
+# extracted from city halls posts
+
+# input file: "document_topic.csv" -> file with document topic data
+# input file: "cases_treated.csv" -> file with treated cases data
+# output file: "plot_graph2.png" -> image of generated graph with topics and cases information
+
 import time
 import pandas as pd
 import matplotlib.pyplot as plt

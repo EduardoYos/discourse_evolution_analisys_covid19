@@ -1,3 +1,17 @@
+# main file of LDA topics modeling. It gets the city halls dataset and treated them to do the LDA
+# topics modeling. It cleans all the data, filtering the covid posts and doing all the steps of
+# LDA topics modeling. Then, the script creates a file of documents-topics relation and also generate a graph
+# of topics during the months of the pandemic.
+
+# input file: "prefeituras.csv" -> main dataset with city halls posts and all other information about the posts
+# input file: "prefeito-cidade.csv" -> dataset with relation of mayors-city halls of Brazil
+# input file: "prefeitos2020.csv" -> dataset with posts by mayors of Brazilians cities in 2020
+# input file: "prefeitos2021.csv" -> dataset with posts by mayors of Brazilians cities in 2021
+
+# output file: "lda_result_mine.html" -> result of pyLDAvis visualization of topics
+# output file: "document_topic.csv" -> dataset with probabilities of each topic order by month
+# output file: "plot_graph.png" -> basic plot of topics during the months of the pandemic.
+
 import time
 import pandas as pd
 import numpy as np
@@ -7,6 +21,8 @@ import string as strin
 import seaborn as sns
 import matplotlib.pyplot as plt
 import warnings
+from datetime import datetime
+
 
 # download when necessary:
 # nltk.download('punkt')
@@ -19,8 +35,9 @@ from nltk.stem import WordNetLemmatizer
 import pyLDAvis
 import pyLDAvis.sklearn
 
-TRANSFORM = True
+TRANSFORM = False
 GENERATE_GRAPH = False
+SAVE = False
 
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords, wordnet
@@ -116,6 +133,7 @@ def main():
     print('Total de posts: {}'.format(df_last.shape[0]))
 
     rws = df_last
+    # rws = df_last.head(10)
 
     rws['Message'] = rws['Message'].str.replace('[^\w\s.]', '', flags=re.UNICODE)
     rws['Message'] = rws['Message'].fillna('')
@@ -125,13 +143,14 @@ def main():
     wnl = WordNetLemmatizer()  # diferente
     rws['lemmatized'] = rws['wordnet_pos'].apply(lambda x: [wnl.lemmatize(word, tag) for word, tag in x])
 
-    # rws.to_csv('data/pre_processed_discourses_10.csv', sep=';')
+    #if SAVE:
+        # rws.to_csv('data/pre_processed_discourses_10.csv', sep=';')
 
     # vectorizer
     stop_words = stopwords.words('portuguese')  # removing stop words
     stop_words.extend((list(rws.city.unique())))
     stop_words.extend(['pracegover', 'macapa', 'acre', 'natal', 'belém',
-                       'curitiba', 'imagem', 'texto', 'fortalezar', 'foto'])
+                       'curitiba', 'imagem', 'texto', 'fortalezar', 'foto', 'belémcontracoronavírus'])
 
     print("\nExecution time - first part: %s seconds" % (time.time() - start_time))
     print("\nInitiating second part...")
@@ -160,7 +179,24 @@ def main():
 
     panel = pyLDAvis.sklearn.prepare(lda_model, transf_matrix, count_vectorizer, mds='tsne')
 
-    pyLDAvis.save_html(panel, './data/lda_result_mine.html')
+    if SAVE:
+        pyLDAvis.save_html(panel, './data/lda_result_mine.html')
+
+    topic_list = [['Topic0', 'Corona vírus e demais tópicos', '9.2%'],
+                  ['Topic1', 'Início da vacinação contra a covid-19 em idosos', '12.5%'],
+                  ['Topic2', 'Notícias sobre coronavírus, órgãos de saúde e abertura de leitos em hospitais para pacientes infectados com a covid-19', '17.4%'],
+                  ['Topic3', 'Aumento do número de casos confirmados e ocorrência de óbitos de pessoas '
+                             'infectadas pelo corona vírus', '13.1%'],
+                  ['Topic4', 'Alerta sobre a pandemia do novo corona vírus e medidas de prevenção contra '
+                             'a doença para a população', '47.7%']]
+
+    if SAVE:
+        with open(path + 'topics.txt', 'w', encoding='utf-8') as f:
+            for i in topic_list:
+                # print('{} - {} - {}'.format(i[0], i[1], i[2]))
+                f.write('{} - {} - {}'.format(i[0], i[1], i[2]))
+                f.write('\n')
+        f.close()
 
     # Transform dataframe
     if (TRANSFORM):
@@ -181,7 +217,8 @@ def main():
             df_document_topic = df_document_topic.groupby('post_created_date').mean().reset_index()
 
             df_graph = df_document_topic
-            df_graph.to_csv(path + 'document_topic.csv', index=False)
+            if SAVE:
+                df_graph.to_csv(path + 'document_topic.csv', index=False)
 
         # seaborn graph
         if (GENERATE_GRAPH):
@@ -194,9 +231,10 @@ def main():
             plt.ylabel("Probabilidade de cada Tópico")
 
             plt.xticks(rotation=45)
-            print("saving graph...")
-            plt.savefig('./data/plot_graph.png')
-            print("graph Saved!")
+            if SAVE:
+                print("saving graph...")
+                plt.savefig('./data/plot_graph.png')
+                print("graph Saved!")
             plt.show()
 
     print("\nExecution time: %s seconds" % (time.time() - start_time))

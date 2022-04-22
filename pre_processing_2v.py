@@ -1,3 +1,6 @@
+# version of jupyter notebook script adapted to run as a python script. It creates a file with
+# LDA visualization using pyLDAvis library.
+
 import time
 
 import matplotlib

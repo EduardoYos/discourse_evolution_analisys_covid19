@@ -1,3 +1,6 @@
+# first version of pre-processing text script. It only display the topics of lda model, but it contains
+# problems to do it. Not used anymore
+
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 import time

@@ -1,3 +1,8 @@
+# script to get covid-19 cases information and treat them to generate the graph
+# with topics information
+
+# input file: "caso.csv" -> file with raw cases data
+# output file: "cases_treated.csv" -> file used in graph generator script
 import time
 import pandas as pd
 from datetime import datetime, timedelta
@@ -22,13 +27,6 @@ def adjust_number_per_month(df):
             interval_d = row['deaths'] - deaths.tolist()[0]
             if (interval_d >= 0):
                 df.loc[index_row, 'deaths'] = interval_d
-
-        # ind = index_row
-        # indx = df.iloc[[index_row]]
-        # value = df.iloc[index_row]['confirmed']
-        # oi = row['confirmed'] - cases
-        # teste = 0
-        # cases = df['confirmed'][row['date']-month == df['date'] and row['city'] == df['city']]
 
     return df
 
@@ -56,7 +54,7 @@ def main():
     df_cases = df_cases.drop_duplicates(['city', 'year-month'], keep="first")
     df_cases = adjust_number_per_month(df_cases)
 
-    df_exe = df_cases[['city', 'confirmed']].groupby('city').sum().reset_index
+    #df_exe = df_cases[['city', 'confirmed']].groupby('city').sum().reset_index
 
     # df_cases2 = df_cases.drop_duplicates('city', keep="last")
     print(df_cases.shape[0])
