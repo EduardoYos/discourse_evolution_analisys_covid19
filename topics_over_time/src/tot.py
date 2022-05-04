@@ -1,17 +1,3 @@
-# Copyright 2015 Abhinav Maurya
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from copy import deepcopy
 
 import nltk
@@ -24,13 +10,16 @@ import numpy as np
 import scipy.stats
 import pickle
 from math import log
-
+from nltk.tokenize import word_tokenize
+import string
 from nltk.corpus import stopwords as stpwrd
 
 
 class TopicsOverTime:
 	def GetCovidCorpusAndDictionary(self, df_documents, df_timestamps, stop_words):
 		documents = []
+		doc_length = []
+		word_list = []
 		timestamps = df_timestamps
 		dictionary = set()
 		# stopwords = stpwrd.words('english')
@@ -39,21 +28,28 @@ class TopicsOverTime:
 		# for line in stop_words:
 		# 	line = line.lower().strip().split()
 		for doc in df_documents:
-			words = [word for word in doc.lower().strip().split() if word not in stop_words]
+			# words = [word for word in doc.lower().strip().split() if word not in stop_words
+			# 		 and (3 < len(word) < 30)]
+			words = word_tokenize(text=doc.lower(), language="portuguese")
+			words = list(filter(lambda x: x not in string.punctuation and
+								 x not in stop_words and (3 < len(x) < 30), words))
 			documents.append(words)
+			word_list += words
 			dictionary.update(set(words))
+			doc_length.append((len(doc)))
 		# for timestamp in fileinput.input(timestamps_path):
 		# 	num_titles = int(timestamp.strip().split()[0])
 		# 	timestamp = float(timestamp.strip().split()[1])
 		# 	timestamps.extend([timestamp for title in range(num_titles)])
 		# for line in fileinput.input(stopwords_path):
 		# 	stopwords.update(Set(line.lower().strip().split()))
+		word_freq_list = nltk.FreqDist(word_list).most_common()
 		first_timestamp = timestamps[0]
 		last_timestamp = timestamps[len(timestamps)-1]
 		timestamps = [1.0*(t-first_timestamp)/(last_timestamp-first_timestamp) for t in timestamps]
 		dictionary = list(dictionary)
 		assert len(documents) == len(timestamps)
-		return documents, timestamps, dictionary
+		return documents, timestamps, dictionary, doc_length, word_freq_list
 
 	def CalculateCounts(self, par):
 		for d in range(par['D']):

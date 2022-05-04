@@ -37,7 +37,7 @@ import pyLDAvis.sklearn
 
 TRANSFORM = False
 GENERATE_GRAPH = False
-SAVE = False
+SAVE = True
 
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.corpus import stopwords, wordnet

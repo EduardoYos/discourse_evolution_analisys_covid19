@@ -39,6 +39,7 @@ def VisualizeTopics(phi, words, num_topics, viz_threshold=9e-3):
 	fig, ax = plt.subplots()
 	heatmap = plt.pcolor(phi_viz, cmap=plt.cm.Blues, alpha=0.8)
 	plt.colorbar()
+	plt.subplots_adjust(left=0.20)
 
 	#fig.set_size_inches(8, 11)
 	ax.grid(False)
@@ -58,11 +59,11 @@ def VisualizeTopics(phi, words, num_topics, viz_threshold=9e-3):
 	    t.tick2On = False
 
 	column_labels = words_viz	#['Word ' + str(i) for i in range(1,1000)]
-	row_labels = ['Topic ' + str(i) for i in range(1,num_topics+1)]
+	row_labels = ['Topic ' + str(i) for i in range(1, num_topics+1)]
 	ax.set_xticklabels(row_labels, minor=False)
 	ax.set_yticklabels(column_labels, minor=False)
 
-	plt.savefig(resultspath + 'topic_distribution1.png')
+	plt.savefig(resultspath + 'topic_distribution3.png')
 	plt.show()
 
 def VisualizeEvolution(psi):
@@ -75,14 +76,14 @@ def VisualizeEvolution(psi):
 
 	ax.legend(loc='best', frameon=False)
 
-	plt.savefig(resultspath + 'topic_evolution1.png')
+	plt.savefig(resultspath + 'topic_evolution3.png')
 	plt.show()
 
 def main():
 	start_time = time.time()
 
 	resultspath = '../results_tot/'
-	tot_pickle_path = resultspath + 'covid_tot.pickle'
+	tot_pickle_path = resultspath + 'covid_totnew.pickle'
 
 	tot_pickle = open(tot_pickle_path, 'rb')
 	par = pickle.load(tot_pickle)
