@@ -21,12 +21,14 @@ def main():
     start_time = time.time()
 
     path = './data/'
-    df_doc = pd.read_csv(path + 'document_topic.csv')
+    df_doc = pd.read_csv(path + 'document_topic2.csv')
     df_cases = pd.read_csv(path + 'cases_treated.csv')
 
     df_cases = df_cases[['year-month', 'confirmed', 'deaths']].groupby('year-month').sum().reset_index()
     df_1st_row = pd.DataFrame([['2020-01', 0, 0]], columns=['year-month', 'confirmed', 'deaths'])
     df_cases = pd.concat([df_1st_row, df_cases], ignore_index=True)
+
+    df_cases = df_cases[(df_cases['year-month'] >= '2020-04') & (df_cases['year-month'] < '2021-01')].reset_index(drop=True)
 
     # seaborn graph
     GENERATE_GRAPH = True

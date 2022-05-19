@@ -35,7 +35,7 @@ from nltk.stem import WordNetLemmatizer
 import pyLDAvis
 import pyLDAvis.sklearn
 
-TRANSFORM = False
+TRANSFORM = True
 GENERATE_GRAPH = False
 SAVE = True
 
@@ -121,6 +121,8 @@ def main():
                           df_mayors[['Message', 'city', 'Post Created Date']]])
 
     df_last = set_df_date(df_last)
+    df_last = df_last[(df_last['Post Created Date'] >= '2020-04-01') & (df_last['Post Created Date'] < '2021-01-01')].reset_index(drop=True)
+
     # endregion
 
     list_covid_words = ['comorbidade', 'ivermectina', 'tamiflu', 'azitromicina', 'lockdown', 'distanciamento social',
@@ -180,7 +182,7 @@ def main():
     panel = pyLDAvis.sklearn.prepare(lda_model, transf_matrix, count_vectorizer, mds='tsne')
 
     if SAVE:
-        pyLDAvis.save_html(panel, './data/lda_result_mine.html')
+        pyLDAvis.save_html(panel, './data/lda_result_mine2.html')
 
     topic_list = [['Topic0', 'Corona vírus e demais tópicos', '9.2%'],
                   ['Topic1', 'Início da vacinação contra a covid-19 em idosos', '12.5%'],
@@ -218,7 +220,7 @@ def main():
 
             df_graph = df_document_topic
             if SAVE:
-                df_graph.to_csv(path + 'document_topic.csv', index=False)
+                df_graph.to_csv(path + 'document_topic2.csv', index=False)
 
         # seaborn graph
         if (GENERATE_GRAPH):

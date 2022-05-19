@@ -44,12 +44,13 @@ class TopicsOverTime:
 		# for line in fileinput.input(stopwords_path):
 		# 	stopwords.update(Set(line.lower().strip().split()))
 		word_freq_list = nltk.FreqDist(word_list).most_common()
+		original_ts = timestamps
 		first_timestamp = timestamps[0]
 		last_timestamp = timestamps[len(timestamps)-1]
 		timestamps = [1.0*(t-first_timestamp)/(last_timestamp-first_timestamp) for t in timestamps]
 		dictionary = list(dictionary)
 		assert len(documents) == len(timestamps)
-		return documents, timestamps, dictionary, doc_length, word_freq_list
+		return documents, original_ts, timestamps, dictionary, doc_length, word_freq_list
 
 	def CalculateCounts(self, par):
 		for d in range(par['D']):
@@ -60,10 +61,10 @@ class TopicsOverTime:
 				par['n'][topic_di][word_di] += 1
 				par['n_sum'][topic_di] += 1
 
-	def InitializeParameters(self, documents, timestamps, dictionary):
+	def InitializeParameters(self, documents, original_ts, timestamps, dictionary):
 		par = {}						# dictionary of all parameters
 		par['dataset'] = 'covid'			# dataset name
-		par['max_iterations'] = 100	# max number of iterations in gibbs sampling
+		par['max_iterations'] = 50	# max number of iterations in gibbs sampling
 		par['T'] = 5					# number of topics
 		par['D'] = len(documents)
 		par['V'] = len(dictionary)
@@ -75,6 +76,7 @@ class TopicsOverTime:
 		par['betafunc_psi'] = [scipy.special.beta( par['psi'][t][0], par['psi'][t][1] ) for t in range(par['T'])]
 		par['word_id'] = {dictionary[i]: i for i in range(len(dictionary))}
 		par['word_token'] = dictionary
+		par['original_ts'] = original_ts
 		par['z'] = [[random.randrange(0,par['T']) for _ in range(par['N'][d])] for d in range(par['D'])]
 		par['t'] = [[timestamps[d] for _ in range(par['N'][d])] for d in range(par['D'])]
 		par['w'] = [[par['word_id'][documents[d][i]] for i in range(par['N'][d])] for d in range(par['D'])]

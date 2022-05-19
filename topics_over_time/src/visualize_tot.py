@@ -26,6 +26,8 @@ import matplotlib.pyplot as plt
 import scipy.stats
 from scipy.stats import beta
 import pprint, pickle
+from datetime import datetime
+
 
 resultspath = '../results_tot/'
 
@@ -66,15 +68,21 @@ def VisualizeTopics(phi, words, num_topics, viz_threshold=9e-3):
 	plt.savefig(resultspath + 'topic_distribution3.png')
 	plt.show()
 
-def VisualizeEvolution(psi):
-	xs = np.linspace(0, 1, num=1000)
+def VisualizeEvolution(psi, timestamp):
+	ts_list = timestamp.unique()
+	xs = np.linspace(0, 1, num=ts_list.size)
+	xs2 = [datetime.fromtimestamp(x).date() for x in ts_list]
+
 	fig, ax = plt.subplots()
 
 	for i in range(len(psi)):
 		ys = [math.pow(1-x, psi[i][0]-1) * math.pow(x, psi[i][1]-1) / scipy.special.beta(psi[i][0],psi[i][1]) for x in xs]
-		ax.plot(xs, ys, label='Topic ' + str(i+1))
+		ax.plot(xs2, ys, label='Topic ' + str(i+1))
 
 	ax.legend(loc='best', frameon=False)
+	plt.xticks(rotation=45)
+	plt.subplots_adjust(bottom=0.15)
+	plt.title("Probabilidade de cada tópico ao longo do tempo")
 
 	plt.savefig(resultspath + 'topic_evolution3.png')
 	plt.show()
@@ -88,10 +96,10 @@ def main():
 	tot_pickle = open(tot_pickle_path, 'rb')
 	par = pickle.load(tot_pickle)
 	VisualizeTopics(par['n'], par['word_token'], par['T'])
-	VisualizeEvolution(par['psi'])
+	VisualizeEvolution(par['psi'], par['original_ts'])
 
 
-	print("\nExecution time: %s seconds" % (time.time() - start_time))
+	print("\nExecution time: {} seconds or {} minutes".format((time.time() - start_time), (time.time() - start_time)/60))
 
 if __name__ == "__main__":
     main()
