@@ -33,7 +33,7 @@ def adjust_number_per_month(df):
 def main():
     start_time = time.time()
 
-    path = './data/'
+    path = '../data/'
     df_cases = pd.read_csv(path + 'caso.csv')
     df_cases = df_cases[['date', 'state', 'city', 'confirmed', 'deaths']]
     # df_cases_full = pd.read_csv(path + 'caso_full.csv')

@@ -1,13 +1,35 @@
+from datetime import datetime
+import math
 import time
-# from nltk.corpus import stopwords
-# import pyLDAvis
-# from tot import TopicsOverTime
-# import numpy as np
 import pickle
+
+import numpy as np
 import pandas as pd
+import scipy
 from statsmodels.formula.api import ols
 
 SAVE_FILES = True
+
+def transform_input(psi, timestamp):
+	ts_list = timestamp.unique()
+	ts_dates = [datetime.fromtimestamp(x).date() for x in ts_list]
+
+	xs = np.linspace(0, 1, num=ts_list.size)
+
+	prob_list = []
+	for i in range(len(psi)):
+		ys = [math.pow(1 - x, psi[i][0] - 1) * math.pow(x, psi[i][1] - 1) / scipy.special.beta(psi[i][0], psi[i][1])
+			  for x in xs]
+		prob_list.append(ys)
+
+	for i in range(len(prob_list)):
+		prob_list[i] = np.asarray(prob_list[i])
+
+	names = ['topic1', 'topic2', 'topic3', 'topic4', 'topic5']
+	df = pd.DataFrame.from_dict(dict(zip(names, prob_list)))
+	df.insert(0, 'Date', ts_dates)
+
+	return df
 
 def main():
 	start_time = time.time()
@@ -19,15 +41,20 @@ def main():
 
 	tot_pickle = open(tot_pickle_path, 'rb')
 	par = pickle.load(tot_pickle)
+	df_tot = transform_input(par['psi'], par['original_ts'])
 
 	pol_df = pd.read_csv(general_datapath + 'politicas_mobilidade.csv')
 	pol_df = pol_df[(pol_df['Date'] >= '2020-04-01') & (pol_df['Date'] < '2021-01-01')].reset_index(drop=True)
 	pol_df = pol_df[['State', 'City', 'Date', 'avg_mobility_7rolling', 'new_confirmed_7rolling']]
+	pol_df = pol_df.groupby('Date').mean().reset_index()
+	pol_df['Date'] = pd.to_datetime(pol_df['Date'])
+	pol_df['Date'] = pd.to_datetime(pol_df['Date']).dt.date
+	df_final = pd.merge(df_tot, pol_df, how="inner", on="Date")
 
-	model = ols("avg_mobility_7rolling ~ new_confirmed_7rolling", data=pol_df)
+	model = ols("avg_mobility_7rolling ~ topic1 + topic2 + topic3 + topic4", data=df_final)
 	response = model.fit()
 	if SAVE_FILES:
-		with open(resultspath + 'linear_regression_results.txt', 'w', encoding='utf-8') as f:
+		with open(resultspath + 'linear_regression_results_tot.txt', 'w', encoding='utf-8') as f:
 			f.write(response.summary().as_text())
 			f.write('\n')
 		f.close()
@@ -36,36 +63,6 @@ def main():
 	# nova_pessoa = pd.DataFrame([{'RA': 236782, 'Height': 140}])
 	# response.predict(nova_pessoa)
 
-	# stop_words = stopwords.words('portuguese')  # removing stop words
-	# stop_words.extend((list(df.city.unique())))
-	# stop_words.extend(['pracegover', 'macapa', 'acre', 'natal', 'belém',
-	# 				   'curitiba', 'imagem', 'texto', 'fortalezar', 'foto', 'belémcontracoronavírus'])
-	#
-	# tot_topic_vectors_path = resultspath + 'covid_tot_topic_vectors.csv'
-	# tot_topic_mixtures_path = resultspath + 'covid_tot_topic_mixtures.csv'
-	# tot_topic_shapes_path = resultspath + 'covid_tot_topic_shapes.csv'
-	# tot_pickle_path = resultspath + 'covid_totnew.pickle'
-	#
-	# tot = TopicsOverTime()
-	# documents, original_ts, timestamps, dictionary, doc_length, word_freq_list = tot.GetCovidCorpusAndDictionary(df['Message'], df['Timestamp'], stop_words)
-	# par = tot.InitializeParameters(documents, original_ts, timestamps, dictionary)
-	# theta, phi, psi = tot.TopicsOverTimeGibbsSampling(par)
-	#
-	# if SAVE_LDAVIS:
-	# 	model_data = {'topic_term_dists': phi,
-	# 			'doc_topic_dists': theta,
-	# 			'doc_lengths': doc_length,
-	# 			'vocab': dictionary,
-	# 			'term_frequency': word_freq_list}
-	# 	model_vis_data = pyLDAvis.prepare(mds='tsne', **model_data)
-	# 	pyLDAvis.save_html(model_vis_data, '../results_tot/lda_result_tot.html')
-	#
-	# np.savetxt(tot_topic_vectors_path, phi, delimiter=',')
-	# np.savetxt(tot_topic_mixtures_path, theta, delimiter=',')
-	# np.savetxt(tot_topic_shapes_path, psi, delimiter=',')
-	# tot_pickle = open(tot_pickle_path, 'wb')
-	# pickle.dump(par, tot_pickle)
-	# tot_pickle.close()
 
 	print("\nExecution time: {} seconds or {} minutes"
 		  .format((time.time() - start_time), (time.time() - start_time)/60))

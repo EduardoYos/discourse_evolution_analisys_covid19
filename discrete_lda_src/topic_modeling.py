@@ -44,6 +44,22 @@ from nltk.corpus import stopwords, wordnet
 from sklearn.decomposition import LatentDirichletAllocation
 
 
+def generate_topic_list(path):
+    topic_list = [['Topic1', 'Tópico 5 do LDAvis', 'Casos (Resíduos)', '7,8%'],
+                  ['Topic2', 'Tópico 2 do LDAvis', 'Medidas de Proteção', '31,4%'],
+                  ['Topic3', 'Tópico 4 do LDAvis', 'Coronavírus', '8%'],
+                  ['Topic4', 'Tópico 1 do LDAvis', 'Saúde e Pandemia', '40,9%'],
+                  ['Topic5', 'Tópico 3 do LDAvis', 'Informações sobre Pandemia', '11,8%']]
+
+    if SAVE:
+        with open(path + 'topics.txt', 'w', encoding='utf-8') as f:
+            for i in topic_list:
+                f.write('{} - {} - {} - {}'.format(i[0], i[1], i[2], i[3]))
+                f.write('\n')
+        f.close()
+
+
+
 def set_df_date(df):
     df['day'] = pd.to_datetime(df['Post Created Date'])
     df['ano_mes'] = df['day'].dt.to_period('M')
@@ -75,7 +91,7 @@ def get_wordnet_pos(tag):
 
 def display_topics(model, feature_names, no_top_words):
     for topic_idx, topic in enumerate(model.components_):
-        print("Topic %d:" % (topic_idx))
+        print("Topic %d:" % (topic_idx + 1))
         print(" ".join([feature_names[i]
                         for i in topic.argsort()[:-no_top_words - 1:-1]]))
 
@@ -103,7 +119,7 @@ def main():
     warnings.filterwarnings("ignore")
 
     # region New DFs
-    path = './data/'
+    path = '../data/'
     df_city_halls = pd.read_csv(path + 'prefeituras.csv')
     df_mayor_city = pd.read_csv(path + 'prefeito-cidade.csv')
     df_20 = pd.read_csv(path + 'prefeitos2020.csv')
@@ -122,7 +138,6 @@ def main():
 
     df_last = set_df_date(df_last)
     df_last = df_last[(df_last['Post Created Date'] >= '2020-04-01') & (df_last['Post Created Date'] < '2021-01-01')].reset_index(drop=True)
-
     # endregion
 
     list_covid_words = ['comorbidade', 'ivermectina', 'tamiflu', 'azitromicina', 'lockdown', 'distanciamento social',
@@ -152,7 +167,8 @@ def main():
     stop_words = stopwords.words('portuguese')  # removing stop words
     stop_words.extend((list(rws.city.unique())))
     stop_words.extend(['pracegover', 'macapa', 'acre', 'natal', 'belém',
-                       'curitiba', 'imagem', 'texto', 'fortalezar', 'foto', 'belémcontracoronavírus'])
+                       'curitiba', 'imagem', 'texto', 'fortalezar', 'foto',
+                       'belémcontracoronavírus', 'prefeiturademacapa', 'todoscontraocoronavirus'])
 
     print("\nExecution time - first part: %s seconds" % (time.time() - start_time))
     print("\nInitiating second part...")
@@ -176,68 +192,55 @@ def main():
 
     tf_feature_names = count_vectorizer.get_feature_names()
     no_top_words = 30
-    print("Printing topics... \n")
-    display_topics(lda_model, tf_feature_names, no_top_words)
+
+    disp_topics = True     # variable to enable display topics
+    if (disp_topics):
+        print("Printing topics... \n")
+        display_topics(lda_model, tf_feature_names, no_top_words)
 
     panel = pyLDAvis.sklearn.prepare(lda_model, transf_matrix, count_vectorizer, mds='tsne')
 
     if SAVE:
-        pyLDAvis.save_html(panel, './data/lda_result_mine2.html')
+        pyLDAvis.save_html(panel, path + 'lda_result_discrete.html')
 
-    topic_list = [['Topic0', 'Corona vírus e demais tópicos', '9.2%'],
-                  ['Topic1', 'Início da vacinação contra a covid-19 em idosos', '12.5%'],
-                  ['Topic2', 'Notícias sobre coronavírus, órgãos de saúde e abertura de leitos em hospitais para pacientes infectados com a covid-19', '17.4%'],
-                  ['Topic3', 'Aumento do número de casos confirmados e ocorrência de óbitos de pessoas '
-                             'infectadas pelo corona vírus', '13.1%'],
-                  ['Topic4', 'Alerta sobre a pandemia do novo corona vírus e medidas de prevenção contra '
-                             'a doença para a população', '47.7%']]
-
-    if SAVE:
-        with open(path + 'topics.txt', 'w', encoding='utf-8') as f:
-            for i in topic_list:
-                # print('{} - {} - {}'.format(i[0], i[1], i[2]))
-                f.write('{} - {} - {}'.format(i[0], i[1], i[2]))
-                f.write('\n')
-        f.close()
+    # generate list of topics from discrete LDA
+    generate_topic_list(path)
 
     # Transform dataframe
     if (TRANSFORM):
         lda_output = lda_model.fit_transform(transf_matrix)
 
         # column names
-        topicnames = ["Topic" + str(i) for i in range(lda_model.n_components)]
+        topicnames = ["topic" + str(i+1) for i in range(lda_model.n_components)]
         # index names
         n_documents = len(df)
         df['docnames'] = ["Doc" + str(i) for i in range(n_documents)]
 
         # Make the pandas dataframe
-        df_document_topic = pd.DataFrame(np.round(lda_output, 2), columns=topicnames, index=df['docnames'])
+        df_document_topic = pd.DataFrame(np.round(lda_output, 4), columns=topicnames, index=df['docnames'])
         if len(df) == len(df_document_topic):
             df_document_topic.insert(loc=0, column='post_created_date', value=df['Post Created Date'].values)
             df_document_topic['post_created_date'] = pd.to_datetime(df_document_topic['post_created_date'])
-            df_document_topic['post_created_date'] = df_document_topic['post_created_date'].dt.strftime('%Y-%m')
-            df_document_topic = df_document_topic.groupby('post_created_date').mean().reset_index()
-
-            df_graph = df_document_topic
+            # df_graph = df_document_topic
             if SAVE:
-                df_graph.to_csv(path + 'document_topic2.csv', index=False)
+                df_document_topic.to_csv(path + 'document_topic_helper.csv', index=False)
 
         # seaborn graph
-        if (GENERATE_GRAPH):
-            df_graph.set_index('post_created_date').plot(kind='bar', stacked=True,
-                                                   color=['blue', 'green', 'grey', 'red', 'orange'])
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
-                       ncol=5, fancybox=True, shadow=True)
-            plt.subplots_adjust(bottom=0.20)
-            plt.xlabel("Mês de criação")
-            plt.ylabel("Probabilidade de cada Tópico")
-
-            plt.xticks(rotation=45)
-            if SAVE:
-                print("saving graph...")
-                plt.savefig('./data/plot_graph.png')
-                print("graph Saved!")
-            plt.show()
+        # if (GENERATE_GRAPH):
+        #     df_graph.set_index('post_created_date').plot(kind='bar', stacked=True,
+        #                                            color=['blue', 'green', 'grey', 'red', 'orange'])
+        #     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
+        #                ncol=5, fancybox=True, shadow=True)
+        #     plt.subplots_adjust(bottom=0.20)
+        #     plt.xlabel("Mês de criação")
+        #     plt.ylabel("Probabilidade de cada Tópico")
+        #
+        #     plt.xticks(rotation=45)
+        #     if SAVE:
+        #         print("saving graph...")
+        #         plt.savefig('./data/plot_graph_old.png')
+        #         print("graph Saved!")
+        #     plt.show()
 
     print("\nExecution time: %s seconds" % (time.time() - start_time))
 

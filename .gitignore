@@ -5,3 +5,6 @@
 .idea/vcs.xml
 ./idea/data
 data
+/topics_over_time/data_tot/
+/topics_over_time/results_tot/
+/results/

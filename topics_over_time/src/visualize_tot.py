@@ -61,8 +61,10 @@ def VisualizeTopics(phi, words, num_topics, viz_threshold=9e-3):
 	    t.tick2On = False
 
 	column_labels = words_viz	#['Word ' + str(i) for i in range(1,1000)]
-	row_labels = ['Topic ' + str(i) for i in range(1, num_topics+1)]
+	# row_labels = ['Topic ' + str(i+1) for i in range(0, num_topics)]
+	row_labels = ['Coronavírus', 'Covid19 (Resíduos)', 'Infos Pandemia', 'Medidas de Proteção', 'Combate à Pandemia']
 	ax.set_xticklabels(row_labels, minor=False)
+	plt.xticks(fontsize=9, rotation=13)
 	ax.set_yticklabels(column_labels, minor=False)
 
 	plt.savefig(resultspath + 'topic_distribution3.png')
@@ -74,10 +76,12 @@ def VisualizeEvolution(psi, timestamp):
 	xs2 = [datetime.fromtimestamp(x).date() for x in ts_list]
 
 	fig, ax = plt.subplots()
+	row_labels = ['Coronavírus', 'Covid19 (Resíduos)', 'Infos Pandemia', 'Medidas de Proteção', 'Combate à Pandemia']
 
 	for i in range(len(psi)):
 		ys = [math.pow(1-x, psi[i][0]-1) * math.pow(x, psi[i][1]-1) / scipy.special.beta(psi[i][0],psi[i][1]) for x in xs]
-		ax.plot(xs2, ys, label='Topic ' + str(i+1))
+		# ax.plot(xs2, ys, label='Topic ' + str(i+1))
+		ax.plot(xs2, ys, label=row_labels[i])
 
 	ax.legend(loc='best', frameon=False)
 	plt.xticks(rotation=45)
