@@ -25,11 +25,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
 from scipy.stats import beta
-import pprint, pickle
+import pickle
 from datetime import datetime
 
 
 resultspath = '../results_tot/'
+topic_list = ['Covid19-(Resíduos)', 'Coronavírus', 'Recomendações Pandemia', 'Medidas de Proteção', 'Infos Pandemia']
 
 
 def VisualizeTopics(phi, words, num_topics, viz_threshold=9e-3):
@@ -62,8 +63,7 @@ def VisualizeTopics(phi, words, num_topics, viz_threshold=9e-3):
 
 	column_labels = words_viz	#['Word ' + str(i) for i in range(1,1000)]
 	# row_labels = ['Topic ' + str(i+1) for i in range(0, num_topics)]
-	row_labels = ['Coronavírus', 'Covid19 (Resíduos)', 'Infos Pandemia', 'Medidas de Proteção', 'Combate à Pandemia']
-	ax.set_xticklabels(row_labels, minor=False)
+	ax.set_xticklabels(topic_list, minor=False)
 	plt.xticks(fontsize=9, rotation=13)
 	ax.set_yticklabels(column_labels, minor=False)
 
@@ -76,17 +76,16 @@ def VisualizeEvolution(psi, timestamp):
 	xs2 = [datetime.fromtimestamp(x).date() for x in ts_list]
 
 	fig, ax = plt.subplots()
-	row_labels = ['Coronavírus', 'Covid19 (Resíduos)', 'Infos Pandemia', 'Medidas de Proteção', 'Combate à Pandemia']
 
 	for i in range(len(psi)):
 		ys = [math.pow(1-x, psi[i][0]-1) * math.pow(x, psi[i][1]-1) / scipy.special.beta(psi[i][0],psi[i][1]) for x in xs]
 		# ax.plot(xs2, ys, label='Topic ' + str(i+1))
-		ax.plot(xs2, ys, label=row_labels[i])
+		ax.plot(xs2, ys, label=topic_list[i])
 
 	ax.legend(loc='best', frameon=False)
 	plt.xticks(rotation=45)
 	plt.subplots_adjust(bottom=0.15)
-	plt.title("Probabilidade de cada tópico ao longo do tempo")
+	# plt.title("Probabilidade de cada tópico ao longo do tempo")
 
 	plt.savefig(resultspath + 'topic_evolution3.png')
 	plt.show()

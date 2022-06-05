@@ -24,7 +24,7 @@ def main():
 	tot_topic_vectors_path = resultspath + 'covid_tot_topic_vectors.csv'
 	tot_topic_mixtures_path = resultspath + 'covid_tot_topic_mixtures.csv'
 	tot_topic_shapes_path = resultspath + 'covid_tot_topic_shapes.csv'
-	tot_pickle_path = resultspath + 'covid_totnew.pickle'
+	tot_pickle_path = resultspath + 'covid_tot_last.pickle'
 
 	tot = TopicsOverTime()
 	documents, original_ts, timestamps, dictionary, doc_length, word_freq_list = tot.GetCovidCorpusAndDictionary(df['Message'], df['Timestamp'], stop_words)
@@ -40,12 +40,12 @@ def main():
 		model_vis_data = pyLDAvis.prepare(mds='tsne', **model_data)
 		pyLDAvis.save_html(model_vis_data, '../results_tot/lda_result_tot.html')
 
-	np.savetxt(tot_topic_vectors_path, phi, delimiter=',')
-	np.savetxt(tot_topic_mixtures_path, theta, delimiter=',')
-	np.savetxt(tot_topic_shapes_path, psi, delimiter=',')
-	tot_pickle = open(tot_pickle_path, 'wb')
-	pickle.dump(par, tot_pickle)
-	tot_pickle.close()
+		np.savetxt(tot_topic_vectors_path, phi, delimiter=',')
+		np.savetxt(tot_topic_mixtures_path, theta, delimiter=',')
+		np.savetxt(tot_topic_shapes_path, psi, delimiter=',')
+		tot_pickle = open(tot_pickle_path, 'wb')
+		pickle.dump(par, tot_pickle)
+		tot_pickle.close()
 
 	print("\nExecution time: {} seconds or {} minutes"
 		  .format((time.time() - start_time), (time.time() - start_time)/60))

@@ -64,7 +64,7 @@ class TopicsOverTime:
 	def InitializeParameters(self, documents, original_ts, timestamps, dictionary):
 		par = {}						# dictionary of all parameters
 		par['dataset'] = 'covid'			# dataset name
-		par['max_iterations'] = 50	# max number of iterations in gibbs sampling
+		par['max_iterations'] = 100	# max number of iterations in gibbs sampling
 		par['T'] = 5					# number of topics
 		par['D'] = len(documents)
 		par['V'] = len(dictionary)
